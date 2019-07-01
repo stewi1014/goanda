@@ -1,7 +1,5 @@
 package goanda
 
-import "encoding/json"
-
 // Supporting OANDA docs - http://developer.oanda.com/rest-live-v20/position-ep/
 
 type OpenPositions struct {
@@ -33,21 +31,27 @@ type ClosePositionPayload struct {
 	ShortUnits string `json: "shortUnits"`
 }
 
-func (c *OandaConnection) GetOpenPositions() OpenPositions {
-	endpoint := "/accounts/" + c.accountID + "/openPositions"
-
-	response := c.Request(endpoint)
-	data := OpenPositions{}
-	unmarshalJson(response, &data)
-	return data
+func (c *Connection) GetOpenPositions() (OpenPositions, error) {
+	op := OpenPositions{}
+	err := c.requestAndUnmarshal(
+		"/accounts/"+
+			c.accountID+
+			"/openPositions",
+		&op,
+	)
+	return op, err
 }
 
-func (c *OandaConnection) ClosePosition(instrument string, body ClosePositionPayload) ModifiedTrade {
-	endpoint := "/accounts/" + c.accountID + "/positions/" + instrument + "/close"
-	jsonBody, err := json.Marshal(body)
-	checkErr(err)
-	response := c.Update(endpoint, jsonBody)
-	data := ModifiedTrade{}
-	unmarshalJson(response, &data)
-	return data
+func (c *Connection) ClosePosition(instrument string, body ClosePositionPayload) (ModifiedTrade, error) {
+	mt := ModifiedTrade{}
+	err := c.updateAndUnmarshal(
+		"/accounts/"+
+			c.accountID+
+			"/positions/"+
+			instrument+
+			"/close",
+		body,
+		&mt,
+	)
+	return mt, err
 }
