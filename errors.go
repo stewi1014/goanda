@@ -3,32 +3,31 @@ package goanda
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 )
 
-func newAPIError(responceCode int, body io.ReadCloser) APIError {
-	defer body.Close()
+func newAPIError(request *http.Request, responce *http.Response) APIError {
+	defer responce.Body.Close()
 
 	msg := struct {
-		errorMessage string `json:"errorMessage,string"`
-		rejectReason string `json:"rejectReason,string"`
+		ErrorMessage string
+		RejectReason string
 	}{}
 
-	b, _ := ioutil.ReadAll(body)
+	apiErr := APIError{
+		Responce: responce,
+		Request:  request,
+	}
 
+	b, _ := ioutil.ReadAll(responce.Body)
 	err := json.Unmarshal(b, &msg)
 	if err != nil {
-		return APIError{
-			HTTPResponceCode: responceCode,
-			Message:          string(b),
-		}
+		apiErr.Message = string(b)
+	} else {
+		apiErr.Message = msg.RejectReason + msg.ErrorMessage
 	}
-	return APIError{
-		HTTPResponceCode: responceCode,
-		Message:          msg.errorMessage + msg.rejectReason,
-	}
+	return apiErr
 }
 
 // APIError is returned when the Oanda server responds with an error
@@ -36,14 +35,16 @@ func newAPIError(responceCode int, body io.ReadCloser) APIError {
 // Message is the returned error message from the server if possible to unmarshal,
 // otherwise it is simply the entire body of the responce
 type APIError struct {
-	HTTPResponceCode int
-	Message          string
+	Request  *http.Request
+	Responce *http.Response
+	Message  string
 }
 
 // APIError implements error
 func (a APIError) Error() string {
-	return fmt.Sprintf("Oanda API Error %v: %v",
-		http.StatusText(a.HTTPResponceCode),
+	return fmt.Sprintf("Oanda API Error [Url: %v, Responce: %v]: %v",
+		a.Request.URL.String(),
+		a.Responce.Status,
 		a.Message,
 	)
 }

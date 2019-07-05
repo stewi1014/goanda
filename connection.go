@@ -153,7 +153,7 @@ func (c *Connection) makeRequest(endpoint string, client http.Client, req *http.
 	}
 
 	if res.StatusCode >= 400 {
-		return nil, newAPIError(res.StatusCode, res.Body)
+		return nil, newAPIError(req, res)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)

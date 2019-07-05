@@ -32,6 +32,7 @@ type OrderBody struct {
 type OrderPayload struct {
 	Order OrderBody `json:"order"`
 }
+
 type OrderResponse struct {
 	LastTransactionID      string `json:"lastTransactionID"`
 	OrderCreateTransaction struct {
