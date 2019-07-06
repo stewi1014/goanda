@@ -17,8 +17,7 @@ func (g Granularity) Duration() time.Duration {
 
 // String returns the granularity as a string, formatted to the oanda standard
 func (g Granularity) String() string {
-	s, _ := candlestickGranularity[g]
-	return s
+	return candlestickGranularity[g]
 }
 
 // Granularities available to the API
