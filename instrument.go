@@ -104,13 +104,13 @@ type InstrumentPricing struct {
 	} `json:"prices"`
 }
 
-func (c *Connection) GetCandles(instrument string, count string, granularity string) (InstrumentHistory, error) {
+func (c *Connection) GetCandles(instrument string, count int, granularity string) (InstrumentHistory, error) {
 	ca := InstrumentHistory{}
 	err := c.requestAndUnmarshal(
 		"/instruments/"+
 			instrument+
 			"/candles?count="+
-			count+
+			strconv.Itoa(count)+
 			"&granularity="+
 			granularity,
 		&ca,
