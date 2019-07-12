@@ -3,9 +3,18 @@ package goanda
 // Supporting OANDA docs - http://developer.oanda.com/rest-live-v20/instrument-ep/
 
 import (
+	"errors"
 	"strconv"
 	"time"
 )
+
+// GranularityFromDuration tries to find a granularity for the given duration
+func GranularityFromDuration(d time.Duration) (Granularity, error) {
+	if _, ok := candlestickGranularity[Granularity(d)]; ok {
+		return Granularity(d), nil
+	}
+	return 0, errors.New("No such granularity")
+}
 
 // Granularity defines a candle's time period
 type Granularity time.Duration
@@ -180,7 +189,7 @@ func (c *Connection) GetCandles(instrument string, count int, g Granularity) (In
 	return ca, err
 }
 
-func (c *Connection) GetTimeCandles(instrument string, count int, g Granularity, to time.Time) (InstrumentHistory, error) {
+func (c *Connection) GetTimeToCandles(instrument string, count int, g Granularity, to time.Time) (InstrumentHistory, error) {
 	ih := InstrumentHistory{}
 	err := c.requestAndUnmarshal(
 		"/instruments/"+
@@ -189,6 +198,21 @@ func (c *Connection) GetTimeCandles(instrument string, count int, g Granularity,
 			strconv.Itoa(count)+
 			"&to="+
 			strconv.Itoa(int(to.Unix()))+
+			"&granularity="+
+			g.String(),
+		&ih,
+	)
+	return ih, err
+}
+func (c *Connection) GetTimeFromCandles(instrument string, count int, g Granularity, from time.Time) (InstrumentHistory, error) {
+	ih := InstrumentHistory{}
+	err := c.requestAndUnmarshal(
+		"/instruments/"+
+			instrument+
+			"/candles?count="+
+			strconv.Itoa(count)+
+			"&from="+
+			strconv.Itoa(int(from.Unix()))+
 			"&granularity="+
 			g.String(),
 		&ih,
